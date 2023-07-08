@@ -16,4 +16,5 @@ find_package(
 # add_subdirectory("${PROJECT_SOURCE_DIR}/challenges/day2/")
 # add_subdirectory("${PROJECT_SOURCE_DIR}/challenges/day3/")
 # add_subdirectory("${PROJECT_SOURCE_DIR}/challenges/day4/")
-add_subdirectory("${PROJECT_SOURCE_DIR}/challenges/day5/")
+# add_subdirectory("${PROJECT_SOURCE_DIR}/challenges/day5/")
+add_subdirectory("${PROJECT_SOURCE_DIR}/challenges/day6/")

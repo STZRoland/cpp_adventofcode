@@ -12,16 +12,13 @@ int main(int argc, char const *argv[])
 {
     boost::filesystem::path inputPath = boost::filesystem::complete("input.txt");
     std::ifstream inputFile(inputPath.string());
-    // std::string line;
     std::string headerLines[8];
 
     for (int i = 0; i < 8; i++)
     {
         std::getline(inputFile, headerLines[i]);
-        std::cout << headerLines[i] << std::endl;
     }
 
-    // std::stack<char> *arrangement = getArrangement(headerLines);
     std::stack<char> arrangement[9];
     getArrangement(headerLines, arrangement);
 
@@ -34,26 +31,19 @@ int main(int argc, char const *argv[])
     std::smatch match;
 
     while (std::getline(inputFile, line)) {
-        // std::cout << "New iteration" << std::endl;
-        // std::string numbers = std::regex_replace(line, expression, basic);
 
         int numbers[3] = {0};
         int idx = 0;
         while (std::regex_search(line, match, expression))
         {
-            // std::cout << match.str() << " ";
             numbers[idx] = std::stoi(match.str());
             line = match.suffix();
             idx++;
         }
-        // std::cout << std::endl;
 
         int count = numbers[0];
         size_t origin = numbers[1];
         size_t destination = numbers[2];
-        // std::cout << count << " " << origin << " " << destination << std::endl;
-
-        // printf("%d, %d, %d", count, origin, destination);
 
         /* Part 1*/
         // for (int i = 0; i < count; i++)
@@ -96,7 +86,6 @@ int main(int argc, char const *argv[])
 
 void getArrangement(std::string lines[8], std::stack<char> outArray[9])
 {
-    // std::stack<char> stacks[8];
     for (int i = 7; i >= 0; i--)
     {
         int stack_idx = 0;

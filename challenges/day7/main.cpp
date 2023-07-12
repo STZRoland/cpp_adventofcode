@@ -6,91 +6,105 @@
 #include <stack>
 #include <string>
 
-class Node {
-  public:
-    std::string name;
+// class Node {
+//   public:
+//     std::string name;
+//
+//     Node *parent;
+//
+//     Node(std::string name, Node *parent) : name(name), parent(parent) {}
+//     virtual int getSize() = 0;
+//     virtual void setParent(Node *parent) = 0;
+//     virtual Node *getParent() = 0;
+// };
 
-    Node *parent;
+class File;
+class Folder;
 
-    Node(std::string name, Node *parent) : name(name), parent(parent) {}
-    virtual int getSize() = 0;
-};
-
-class File : public Node {
+class File {
   public:
     int size;
-
-    File(std::string name, Node *parent, int size)
-        : Node(name, parent), size(size) {}
-
-    int getSize() { return size; }
-};
-
-class Folder : public Node {
-  public:
-    std::vector<Folder *> subFolder;
-    std::vector<File *> subFiles;
+    std::string name;
     Folder *parent;
 
-    Folder(std::string name, Folder *parent) : Node(name, parent) {
-        subFolder = std::vector<Folder *>();
-        subFiles = std::vector<File *>();
+    File(std::string name, Folder *parent, int size)
+        : name(name), parent(parent), size(size) {}
+
+    int getSize() { return size; }
+    void setParent(Folder *parent) { parent = parent; }
+    Folder *getParent() { return parent; }
+};
+
+class Folder {
+  public:
+    std::vector<Folder> subFolder;
+    std::vector<File> subFiles;
+    std::string name;
+    Folder *parent;
+
+    Folder(std::string name, Folder *parent) : name(name), parent(parent) {
+        subFolder = std::vector<Folder>();
+        subFiles = std::vector<File>();
     }
 
     int getSize() {
         int size = 0;
-        for (Folder *folder : subFolder) {
-            size += folder->getSize();
+        for (Folder &folder : subFolder) {
+            size += folder.getSize();
         }
-        for (File *file : subFiles) {
-            size += file->getSize();
+        for (File &file : subFiles) {
+            size += file.getSize();
         }
         return size;
     }
 
+    void setParent(Folder *parent) { parent = parent; }
+    Folder *getParent() { return parent; }
+
     void printContent() {
-        for (File *file : subFiles) {
-            std::cout << "f " << file->name << std::endl;
+        for (File &file : subFiles) {
+            std::cout << "f " << file.name << std::endl;
         }
-        for (Folder *folder : subFolder) {
-            std::cout << "D " << folder->name << std::endl;
+        for (Folder &folder : subFolder) {
+            std::cout << "D " << folder.name << std::endl;
         }
     }
 
     int partOne() {
-        std::cout << "FOLDER: " << name << ", size: " << getSize() << std::endl;
+        // std::cout << "FOLDER: " << name << ", size: " << getSize() <<
+        // std::endl;
         int size = getSize();
         int returnSize = 0;
         if (size <= 100000) {
             returnSize = size;
         }
-        for (Folder *folder : subFolder) {
-            returnSize += folder->partOne();
+        for (Folder &folder : subFolder) {
+            returnSize += folder.partOne();
         }
         // std::cout << "Return size " << returnSize << std::endl;
         // std::cout << "Size " << size << std::endl;
-        printContent();
+        // printContent();
         return returnSize;
     }
 
-    void addSubFolder(Folder *folder) {
-        this->subFolder.push_back(folder);
+    void addSubFolder(Folder folder) {
+        subFolder.push_back(folder);
         // std::cout << "Added folder " << folder->name << std::endl;
     }
-    void addFile(File *file) { this->subFiles.push_back(file); }
+    void addFile(File file) { subFiles.push_back(file); }
 
     Folder *getFolder(std::string name) {
-        for (Folder *folder : subFolder) {
-            if (folder->name == name) {
-                return folder;
+        for (Folder &folder : subFolder) {
+            if (folder.name == name) {
+                return &folder;
             }
         }
         return nullptr;
     }
     File *getFile(std::string name) {
-        for (File *file : subFiles) {
-            if (file->name == name) {
-                return file;
+        for (File &file : subFiles) {
+            if (file.name == name) {
+                return &file;
             }
         }
         return nullptr;
@@ -105,35 +119,34 @@ int main(int argc, char const *argv[]) {
     std::getline(inputFile, line);
 
     Folder root{"root", nullptr};
+    root.parent = &root;
     Folder *currentRoot = &root;
 
     while (std::getline(inputFile, line)) {
         char firstChar = line.at(0);
-        std::cout << std::endl;
-        std::cout << line << std::endl;
-        std::cout << "Current root " << currentRoot->name << std::endl;
+        // std::cout << std::endl;
+        // std::cout << line << std::endl;
+        // std::cout << "Current root " << currentRoot->name << std::endl;
 
         if (firstChar == '$') {
             // cd
             if (line.at(2) == 'c') {
                 std::string folderName = line.substr(5);
                 if (folderName == "..") {
-                    std::cout << "cd .. from " << currentRoot->name << " to "
-                              << currentRoot->parent->name << std::endl;
-                    currentRoot = currentRoot->parent;
+                    // std::cout << "Before segfault" << std::endl;
+                    // std::cout << "cd .. from " << currentRoot->name << " to "
+                    //           << currentRoot->getParent()->name << std::endl;
+                    currentRoot = currentRoot->getParent();
+                    // currentRoot
                     continue;
                 }
 
                 Folder *foundFolder = currentRoot->getFolder(folderName);
                 if (foundFolder) {
-                    std::cout << "cd from " << currentRoot->name << " to "
-                              << foundFolder->name << std::endl;
-                    currentRoot = foundFolder;
+                    // std::cout << "cd from " << currentRoot->name << " to "
+                    //           << foundFolder->name << std::endl;
+                    currentRoot = *&foundFolder;
                 } else {
-                    // Folder newFolder(folderName, currentRoot);
-                    // std::cout << "mkdir " << newFolder.name << std::endl;
-                    // // Folder newFolder = *new Folder(folderName,
-                    // currentRoot); currentRoot->addSubFolder(&newFolder);
                     std::cout << "Error, folder with name " << folderName
                               << " does not exist in dir " << currentRoot->name
                               << std::endl;
@@ -146,13 +159,13 @@ int main(int argc, char const *argv[]) {
             std::string folderName = line.substr(4);
             Folder *foundFolder = currentRoot->getFolder(folderName);
             if (foundFolder) {
-                currentRoot = foundFolder;
-                std::cout << "Listing folder " << folderName << std::endl;
+                // currentRoot = foundFolder;
+                // std::cout << "Listing folder " << folderName << std::endl;
             } else {
-                Folder newFolder(folderName, currentRoot);
-                // Folder newFolder = *new Folder(folderName, currentRoot);
-                std::cout << "Creating folder " << folderName << std::endl;
-                currentRoot->addSubFolder(&newFolder);
+                // Folder newFolder(folderName, currentRoot);
+                Folder newFolder = *new Folder(folderName, currentRoot);
+                // std::cout << "Creating folder " << folderName << std::endl;
+                currentRoot->addSubFolder(newFolder);
             }
         } else {
             std::size_t spacePos = line.find(' ');
@@ -165,7 +178,7 @@ int main(int argc, char const *argv[]) {
             if (!foundFile) {
                 File newFile(fileName, currentRoot, size);
                 // File newFile = *new File(fileName, currentRoot, size);
-                currentRoot->addFile(&newFile);
+                currentRoot->addFile(newFile);
             }
         }
     }

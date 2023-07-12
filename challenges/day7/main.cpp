@@ -6,20 +6,15 @@
 #include <stack>
 #include <string>
 
-// class Node {
-//   public:
-//     std::string name;
-//
-//     Node *parent;
-//
-//     Node(std::string name, Node *parent) : name(name), parent(parent) {}
-//     virtual int getSize() = 0;
-//     virtual void setParent(Node *parent) = 0;
-//     virtual Node *getParent() = 0;
-// };
-
 class File;
 class Folder;
+
+const int totalSize = 70000000;
+const int requiredSize = 30000000;
+
+// Super ugly but well
+Folder *smallestPossibleFolder;
+int currentSmallestSize = 1000000000;
 
 class File {
   public:
@@ -71,8 +66,6 @@ class Folder {
     }
 
     int partOne() {
-        // std::cout << "FOLDER: " << name << ", size: " << getSize() <<
-        // std::endl;
         int size = getSize();
         int returnSize = 0;
         if (size <= 100000) {
@@ -81,16 +74,23 @@ class Folder {
         for (Folder &folder : subFolder) {
             returnSize += folder.partOne();
         }
-        // std::cout << "Return size " << returnSize << std::endl;
-        // std::cout << "Size " << size << std::endl;
-        // printContent();
         return returnSize;
     }
 
-    void addSubFolder(Folder folder) {
-        subFolder.push_back(folder);
-        // std::cout << "Added folder " << folder->name << std::endl;
+    void partTwo(int minSize) {
+        int size = getSize();
+
+        if (size >= minSize && size <= currentSmallestSize) {
+            smallestPossibleFolder = this;
+            currentSmallestSize = size;
+        }
+
+        for (Folder &folder : subFolder) {
+            folder.partTwo(minSize);
+        }
     }
+
+    void addSubFolder(Folder folder) { subFolder.push_back(folder); }
     void addFile(File file) { subFiles.push_back(file); }
 
     Folder *getFolder(std::string name) {
@@ -124,18 +124,12 @@ int main(int argc, char const *argv[]) {
 
     while (std::getline(inputFile, line)) {
         char firstChar = line.at(0);
-        // std::cout << std::endl;
-        // std::cout << line << std::endl;
-        // std::cout << "Current root " << currentRoot->name << std::endl;
 
         if (firstChar == '$') {
             // cd
             if (line.at(2) == 'c') {
                 std::string folderName = line.substr(5);
                 if (folderName == "..") {
-                    // std::cout << "Before segfault" << std::endl;
-                    // std::cout << "cd .. from " << currentRoot->name << " to "
-                    //           << currentRoot->getParent()->name << std::endl;
                     currentRoot = currentRoot->getParent();
                     // currentRoot
                     continue;
@@ -143,8 +137,6 @@ int main(int argc, char const *argv[]) {
 
                 Folder *foundFolder = currentRoot->getFolder(folderName);
                 if (foundFolder) {
-                    // std::cout << "cd from " << currentRoot->name << " to "
-                    //           << foundFolder->name << std::endl;
                     currentRoot = *&foundFolder;
                 } else {
                     std::cout << "Error, folder with name " << folderName
@@ -158,13 +150,8 @@ int main(int argc, char const *argv[]) {
         if (line.at(0) == 'd') {
             std::string folderName = line.substr(4);
             Folder *foundFolder = currentRoot->getFolder(folderName);
-            if (foundFolder) {
-                // currentRoot = foundFolder;
-                // std::cout << "Listing folder " << folderName << std::endl;
-            } else {
-                // Folder newFolder(folderName, currentRoot);
+            if (!foundFolder) {
                 Folder newFolder = *new Folder(folderName, currentRoot);
-                // std::cout << "Creating folder " << folderName << std::endl;
                 currentRoot->addSubFolder(newFolder);
             }
         } else {
@@ -183,6 +170,17 @@ int main(int argc, char const *argv[]) {
         }
     }
 
-    std::cout << "Complete size: " << root.getSize() << std::endl;
+    int occupiedSize = root.getSize();
+    std::cout << "Occupied size: " << occupiedSize << std::endl;
     std::cout << "Part one result: " << root.partOne() << std::endl;
+
+    int freeSize = totalSize - occupiedSize;
+    int deleteSize = requiredSize - freeSize;
+
+    std::cout << "The size required to delete is " << deleteSize << std::endl;
+    smallestPossibleFolder = &root;
+    root.partTwo(deleteSize);
+    std::cout << "Smallest possible Folder " << smallestPossibleFolder->name
+              << " with size " << smallestPossibleFolder->getSize()
+              << std::endl;
 }
